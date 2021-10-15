@@ -1,0 +1,240 @@
+CREATE TABLE Guest(
+    guest_id int Primary Key,
+     g_name VARCHAR(20) NOT NULL , 
+     email VARCHAR(20) ,
+     phone_number varchar(15) );  
+
+CREATE TABLE ReservationAgent(
+     resAgent_id int PRIMARY KEY,
+     ra_name VARCHAR(20) NOT NULL , 
+     email VARCHAR(20)  ,
+     phone_number varchar(15) );
+     
+CREATE TABLE Hotel(
+    hotel_id int PRIMARY KEY,
+    hotel_name VARCHAR(20) NOT NULL , 
+    hotel_code number(4) not null,
+    city VARCHAR(20) not null ,
+    state VARCHAR(20) not null ,
+    main_phone_number varchar(15) ); 
+   
+CREATE TABLE RoomType(
+    room_type_id int PRIMARY KEY,
+    room_type VARCHAR(20) , 
+    prim_facility  VARCHAR(20)); 
+     
+CREATE TABLE SPosition(
+    position_id int PRIMARY KEY,
+    sposition VARCHAR(20) );
+    
+CREATE TABLE PaymentDetails(
+    payment_type_id int PRIMARY KEY,
+    payment_type VARCHAR(20) , 
+    payment_status  number(1));
+    
+    
+CREATE TABLE Rate(
+      rate_id int PRIMARY KEY,
+      room_type_id int ,
+      FOREIGN KEY (room_type_id)  REFERENCES RoomType(room_type_id),
+      rate decimal(5,2) );
+
+      
+ CREATE TABLE Staff(
+      staff_id int PRIMARY KEY,
+      position_id int ,
+      FOREIGN KEY (position_id)  REFERENCES SPosition(position_id),     
+      s_name VARCHAR(20) NOT NULL , 
+      email VARCHAR(20)  ,
+      phone_number varchar(15) ); 
+
+ CREATE TABLE Room(
+      room_id int PRIMARY KEY,
+      hotel_id int ,
+      FOREIGN KEY (hotel_id)  REFERENCES Hotel(hotel_id),
+      room_type_id int ,
+      FOREIGN KEY (room_type_id)  REFERENCES RoomType(room_type_id),
+      room_number number(3),
+      floor number(2));
+      
+ CREATE TABLE Booking(
+   booking_id int PRIMARY KEY,
+   hotel_id int ,
+      FOREIGN KEY (hotel_id)  REFERENCES Hotel(hotel_id),
+   resAgent_id int,
+   FOREIGN KEY (resAgent_id)  REFERENCES ReservationAgent(resAgent_id),
+   guest_id int,
+   FOREIGN KEY (guest_id)  REFERENCES Guest(guest_id),
+    room_count number(2) ,
+   data_from  DATE ,
+   data_to   DATE  ,
+   CHECK (data_to > data_from)  );
+
+
+CREATE TABLE Payment(
+  payment_id int PRIMARY KEY,
+  booking_id int ,
+      FOREIGN KEY (booking_id)  REFERENCES Booking(booking_id),
+  pdate DATE ,
+  payment_type_id int ,
+      FOREIGN KEY (  payment_type_id)  REFERENCES PaymentDetails(payment_type_id));
+      
+ALTER TABLE Room
+ADD booking_id int; 
+
+ALTER TABLE Room
+ADD FOREIGN KEY (booking_id )
+REFERENCES Booking(booking_id ); 
+
+commit;
+
+Create table Solicita(
+    booking_id int not null,
+    guest_id int not null ,
+    resAgent_id int not null,
+    FOREIGN KEY (booking_id)  REFERENCES Booking(booking_id),
+    FOREIGN KEY (resAgent_id)  REFERENCES ReservationAgent(resAgent_id),
+    FOREIGN KEY (guest_id)  REFERENCES Guest(guest_id) ,
+    PRIMARY KEY( booking_id, guest_id, resAgent_id )
+           
+);
+Create table Lucreaza(
+   room_id int ,
+   FOREIGN KEY (room_id)  REFERENCES Room(room_id),
+   staff_id int,
+   FOREIGN KEY (staff_id)  REFERENCES Staff(staff_id),
+   PRIMARY KEY( staff_id,room_id)
+);
+
+commit;
+
+
+
+INSERT INTO Guest VALUES  (10,'Ana Marin','anam11@gmail.com','072658943');
+INSERT INTO Guest  VALUES (20,'Ionut Gheorghe ',NULL,'0724568977');
+INSERT INTO Guest VALUES  (30,'Cristina Ghimis','ghimisc@email.com', null);
+INSERT INTO Guest VALUES  (40,'Ion Sima','simaion@email','07345671111');
+INSERT INTO Guest VALUES  (50,'Monica Barda','monipro@email','075321451');
+
+Select * from Guest;
+
+
+
+
+INSERT INTO ReservationAgent VALUES  (11,'Daniel Marin','danimarin@gmail.com','0726522943');
+INSERT INTO ReservationAgent  VALUES (22,'Bratu Valentina','valibratu@gmail.com','072444477');
+INSERT INTO ReservationAgent VALUES  (33,'Cristina Petre','petre@email.com', null);
+INSERT INTO ReservationAgent VALUES  (44,'Ionela  Marcel  ','simaion@email','0734567151');
+INSERT INTO ReservationAgent VALUES  (55,'Mara Apetrei','mara123o@email','077891451');
+Select * from ReservationAgent;
+
+
+INSERT INTO Hotel VALUES  (1,'Grand ' , 1895 ,'Madrid', 'Spania' ,'0123548');
+INSERT INTO Hotel VALUES  (2,'Select ' , 1995 ,'Madrid', 'Spania' ,'0169948');
+INSERT INTO Hotel VALUES  (3,'Olimp ' , 4825 ,'Atena', 'Grecia' ,'06623511');
+INSERT INTO Hotel VALUES  (4,'Central' , 1588 ,'Praga', 'Cehia' ,'09885208');
+INSERT INTO Hotel VALUES  (5,'Apolo' , 4834 ,'Atena', 'Grecia' ,'0666611');
+Select * from Hotel;
+
+
+INSERT INTO RoomType VALUES  (141,'dubla','baie privata');
+INSERT INTO RoomType VALUES  (142,'dubla','baie comuna');
+INSERT INTO RoomType VALUES  (143,'tripla','baie privata');
+INSERT INTO RoomType VALUES  (144,'tripla','baie comuna');
+INSERT INTO RoomType VALUES  (145,'apartament',null);
+Select * from RoomType;
+ 
+ 
+ 
+INSERT INTO SPosition VALUES  (200,'menajera');
+INSERT INTO SPosition VALUES  (210,'valet');
+INSERT INTO SPosition VALUES  (220,'asistenta');
+INSERT INTO SPosition VALUES  (230,'bucatar');
+INSERT INTO SPosition VALUES  (240,'bona');
+INSERT INTO SPosition VALUES  (250,'sofer');
+Select * from SPosition;
+
+
+INSERT INTO Rate VALUES  (131,141,145.5);
+INSERT INTO Rate VALUES  (132,142,130);
+INSERT INTO Rate VALUES  (133,143,155);
+INSERT INTO Rate VALUES  (134,144,140.0);
+INSERT INTO Rate VALUES  (135,145,165.5);
+Select * from Rate;
+
+INSERT INTO PaymentDetails VALUES  (151,'cash',1);
+INSERT INTO PaymentDetails VALUES  (152,'cash',0);
+INSERT INTO PaymentDetails VALUES  (153,'online',0);
+INSERT INTO PaymentDetails VALUES  (154,'online',1);
+INSERT INTO PaymentDetails VALUES  (155,'card',1);
+Select * from PaymentDetails;
+
+
+INSERT INTO Booking VALUES  (1111,11,10,2,to_date('20-06-2021','DD-MM-YY'),to_date('27-06-2021','DD-MM-YY'),1);
+INSERT INTO Booking VALUES  (1112,22,20,1,to_date('15-08-2021','DD-MM-YY'),to_date('24-08-2021','DD-MM-YY'),2);
+INSERT INTO Booking VALUES  (1113,33,40,1,to_date('25-09-2021','DD-MM-YY'),to_date('29-09-2021','DD-MM-YY'),2);
+INSERT INTO Booking VALUES  (1114,11,30,1,to_date('02-09-2021','DD-MM-YY'),to_date('09-09-2021','DD-MM-YY'),4);
+INSERT INTO Booking VALUES  (1115,55,50,1,to_date('20-06-2021','DD-MM-YY'),to_date('27-06-2021','DD-MM-YY'),5);
+Select * from Booking;
+
+
+CREATE SEQUENCE SEQ_PAY
+INCREMENT by 1
+START WITH 2021
+MAXVALUE 3000
+NOCYCLE;
+
+INSERT INTO Payment VALUES  (SEQ_PAY.NEXTVAL,1111,to_date('20-06-2021','DD-MM-YY'),155);
+INSERT INTO Payment VALUES  (SEQ_PAY.NEXTVAL,1112,to_date('13-08-2021','DD-MM-YY'),152);
+INSERT INTO Payment VALUES  (SEQ_PAY.NEXTVAL,1113,to_date('25-09-2021','DD-MM-YY'),153);
+INSERT INTO Payment VALUES  (SEQ_PAY.NEXTVAL,1114,to_date('02-09-2021','DD-MM-YY'),155);
+INSERT INTO Payment VALUES  (SEQ_PAY.NEXTVAL,1115,to_date('15-06-2021','DD-MM-YY'),154);
+Select * from Payment;
+
+
+INSERT INTO ROOM VALUES(160,  1,  141,  10, 1,1111);
+INSERT INTO ROOM VALUES(161,  2,  142,  11, 1,1112);
+INSERT INTO ROOM VALUES(162,  3,  143,  12, 2,1113);
+INSERT INTO ROOM VALUES(163,  1,  144,  23, 2,1111);
+INSERT INTO ROOM VALUES(164, 5,  145,  54, 3,1115);
+INSERT INTO ROOM VALUES(165, 4,  145,  53, 4,1114);
+Select * from Room;
+
+INSERT INTO Staff VALUES(100, 200, 'Marcel Marius', 'marcel@gmail.com', '0767113311' );
+INSERT INTO Staff VALUES(110, 210, 'Andrei Valentin', 'andreivali@mail.com', '0782423834' );
+INSERT INTO Staff VALUES(120, 220, 'Lascar Daniel', 'lascarpro@gmail.com', '0769188812' );
+INSERT INTO Staff VALUES(130, 230, 'Alexandru Mircea', 'alexmirc@gmail.com', '0789123844' );
+INSERT INTO Staff VALUES(140, 240, 'Radu Gabriel', 'radu@gmail.com', '0765113366' );
+Select * from Staff;
+
+
+
+INSERT INTO Solicita VALUES  (1111,10,11);
+INSERT INTO Solicita VALUES  (1111,10,22);
+INSERT INTO Solicita VALUES  (1112,20,22);
+INSERT INTO Solicita VALUES  (1112,20,11);
+INSERT INTO Solicita VALUES  (1112,20,33);
+INSERT INTO Solicita VALUES  (1113,40,11);
+INSERT INTO Solicita VALUES  (1113,40,33);
+INSERT INTO Solicita VALUES  (1114,30,11);
+INSERT INTO Solicita VALUES  (1114,30,44);
+INSERT INTO Solicita VALUES  (1115,50,11);
+INSERT INTO Solicita VALUES  (1115,50,55);
+Select * from Solicita;
+
+
+
+INSERT INTO Lucreaza VALUES  (161,110);
+INSERT INTO Lucreaza VALUES  (161,120);
+INSERT INTO Lucreaza VALUES  (162,120);
+INSERT INTO Lucreaza VALUES  (162,130);
+INSERT INTO Lucreaza VALUES  (163,110);
+INSERT INTO Lucreaza VALUES  (163,100);
+INSERT INTO Lucreaza VALUES  (164,140);
+INSERT INTO Lucreaza VALUES  (164,120);
+INSERT INTO Lucreaza VALUES  (160,100);
+INSERT INTO Lucreaza VALUES  (160,110);
+Select * from Lucreaza;
+
+
+commit;

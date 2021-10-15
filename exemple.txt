@@ -1,0 +1,123 @@
+--11
+--1 Numele angajatilor care se ocupa de rezervarile facute dupa data de 15-AUG-2021
+
+Select s_name as Nume_angajat
+from staff s inner join lucreaza l 
+on s.staff_id = l.staff_id inner join room r
+on r.room_id = l.room_id  inner join booking b
+on b.booking_id = r.booking_id 
+where b.data_from>'15-AUG-2021';
+
+-- 2 Sa se selecteze codul rezervarilor , codul clinetului si sa se verifice daca acesta are numar de telefon , daca are se va afisa "are numar de telefon
+--  pentru rezervarile care au un tarif mai mare de 140
+select booking_id as cod_rezervare, b.guest_id as cod_client , DECODE(phone_number, null, 'Nu are numar de telefon ', 'are numar de telefon')  as Verificare_nr_de_contact
+from booking b , guest g
+where b.booking_id in (Select booking_id from room v
+                       where v.room_type_id in ( select room_type_id from RoomType r
+                                                where r.room_type_id in ( select room_type_id from Rate where rate>140)
+                                                )) 
+      and  b.guest_id =g.guest_id ;
+
+--verificare daca merge decode
+select guest_id ,DECODE(phone_number, null, 'Nu are numar de telefon ', phone_number) 
+from guest;
+
+--3 Sa se selecteze numele clientilor si emailul pentru cei ce au ales metoda de plata pentru rezervarea facuta , mai tarziu ( status=0 )
+
+select unique( g_name ) as nume_client, nvl(email ,'Nu are email') as email
+from guest g inner join solicita s
+on s.guest_id=g.guest_id  inner join booking b
+on s.booking_id=b.booking_id inner join payment p
+on p.booking_id =b.booking_id inner join paymentdetails pd
+on p.payment_type_id=pd.payment_type_id
+where pd.payment_status=0;
+--4  Sa se afiseze descrescator codul agentilor si numarul de rezervari (daca are mai mult de 2 sau o singura rezervare) pentru agentii ale caror 
+--rezervari facute au data de inceput  mai mare decat data curenta si sejurl ( data de inceput - data incheierii) este mai mare de 5 zile  
+                                                        
+select resagent_id ,case when  count(booking_id)>=2 THEN 'are mau mult de 2 rezervari facute ' else 'are o singura rezervare' end as Rezervari
+from solicita                      
+group by resagent_id
+having resagent_id in (select resagent_id  
+                          from  booking
+                          where to_char(data_from,'dd/mm/yyyy') > TO_CHAR(SYSDATE, 'MM-DD-YYYY') and  data_to-data_from > 5
+                         )
+order by count(booking_id) desc;
+
+---5  sa se selecteze codul hotelului din Spania si tipul de camerei al camerelor care au fost rezervate cu tariful minim 
+
+with  n1 as (
+           select hotel_id 
+           from hotel
+           where upper(state) like 'SPANIA' ) ,
+      n2 as (
+         select min(rate) as tarifminim ,room_type_id
+         from rate
+         group by room_type_id  ) 
+select hotel_id , room_type_id  from n1, n2 
+where tarifminim =(select min(rate) from rate)and  (hotel_id,room_type_id) in ( select hotel_id, room_type_id from room) ;
+
+--12
+Update roomType
+set prim_facility ='fara baie'
+where  room_type_id in (select room_type_id
+                          from room r inner join booking b 
+                         on b.booking_id=r.booking_id) and lower(prim_facility)='baie comuna';
+select * from roomType;
+rollback;
+
+select * from Sposition;
+
+delete from Sposition
+where position_id not in ( select position_id from staff);
+
+rollback;
+
+select * from solicita;
+
+delete from solicita 
+where (booking_id,guest_id,resAgent_id ) not in (select booking_id,guest_id,resAgent_id from booking );
+
+rollback;
+
+
+--16
+--Sa se afiseze codul agentului,codul rezervarii, unde statsul platii este 0 , iar tipul de plata este cash. 
+
+SELECT DISTINCT b.resagent_id ,b.booking_id
+FROM booking b
+WHERE NOT EXISTS
+(SELECT 1
+FROM payment  p inner join paymentDetails pd
+on pd.payment_type_id =p.payment_type_id 
+where payment_status=0 and LOWER(payment_type) = 'cash'
+AND NOT EXISTS
+(SELECT 'x'
+FROM booking b1
+WHERE b1.booking_id=b.booking_id and  b1.booking_id=p.booking_id)); 
+
+
+
+--sa se afiseze codul angajatilor   care lucreaza in toate  camerele care au fost rezervate dupa luna a 9-a
+
+
+select staff_id
+FROM lucreaza
+WHERE room_id in 
+(SELECT room_id
+  FROM room r inner join booking b 
+on b.booking_id=r.booking_id
+where TO_CHAR(b.data_from,'mm')>'09' ) 
+GROUP BY staff_id
+HAVING COUNT(staff_id)=
+(SELECT COUNT(staff_id)
+FROM staff);
+
+--sa se selecteze codul clientului, numele hotelului, tara si tipul camerei  de acestia 
+
+select  distinct s.guest_id , hotel_name, state ,rt.room_type 
+from roomType rt
+left outer join room r on rt.room_type_id=r.room_type_id
+left outer join hotel h on r.hotel_id=h.hotel_id
+left outer join booking b on r.booking_id=b.booking_id
+left outer join solicita s on s.booking_id=b.booking_id;
+
